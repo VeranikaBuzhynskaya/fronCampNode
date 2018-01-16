@@ -1,0 +1,252 @@
+4.1. Create an index which will be used by this query and provide proof (from explain() or Compass UI) that the index is indeed used by the winning plan:
+     db.restaurants.find({ name: "Glorious Food" })
+
+	Query: db.restaurants.createIndex({name: 1})
+
+	Results: {
+                "createdCollectionAutomatically" : false,
+                "numIndexesBefore" : 1,
+                "numIndexesAfter" : 2,
+                "ok" : 1
+            }
+
+	Proof: db.restaurants.find({ name: "Glorious Food" }).explain()
+        Result: {
+        "queryPlanner" : {
+                "plannerVersion" : 1,
+                "namespace" : "frontcamp.restaurants",
+                "indexFilterSet" : false,
+                "parsedQuery" : {
+                        "name" : {
+                                "$eq" : "Glorious Food"
+                        }
+                },
+                "winningPlan" : {
+                        "stage" : "FETCH",
+                        "inputStage" : {
+                                "stage" : "IXSCAN",
+                                "keyPattern" : {
+                                        "name" : 1
+                                },
+                                "indexName" : "name_1",
+                                "isMultiKey" : false,
+                                "multiKeyPaths" : {
+                                        "name" : [ ]
+                                },
+                                "isUnique" : false,
+                                "isSparse" : false,
+                                "isPartial" : false,
+                                "indexVersion" : 2,
+                                "direction" : "forward",
+                                "indexBounds" : {
+                                        "name" : [
+                                                "[\"Glorious Food\", \"Glorious Food\"]"
+                                        ]
+                                }
+                        }
+                },
+                "rejectedPlans" : [ ]
+        },
+        "serverInfo" : {
+                "host" : "drozdovase",
+                "port" : 27017,
+                "version" : "3.6.2",
+                "gitVersion" : "489d177dbd0f0420a8ca04d39fd78d0a2c539420"
+        },
+        "ok" : 1
+}
+
+4.2. Drop index from task 4.1
+
+	Query: db.restaurants.dropIndex({name: 1})
+
+	Results: { "nIndexesWas" : 2, "ok" : 1 }
+
+4.3. Create an index to make this query covered and provide proof (from explain() or Compass UI) that it is indeed covered:
+     db.restaurants.find({ restaurant_id: "41098650" }, { _id: 0, borough: 1 })
+
+     	Query: db.restaurants.createIndex({restaurant_id:1, borough:1})
+	Results: {
+            "createdCollectionAutomatically" : false,
+            "numIndexesBefore" : 1,
+            "numIndexesAfter" : 2,
+            "ok" : 1
+	 }
+
+	Proof: db.restaurants.find({ restaurant_id: "41098650" }, { _id: 0, borough: 1 }).explain();
+	Results : {
+        "queryPlanner" : {
+                "plannerVersion" : 1,
+                "namespace" : "frontcamp.restaurants",
+                "indexFilterSet" : false,
+                "parsedQuery" : {
+                        "restaurant_id" : {
+                                "$eq" : "41098650"
+                        }
+                },
+                "winningPlan" : {
+                        "stage" : "PROJECTION",
+                        "transformBy" : {
+                                "_id" : 0,
+                                "borough" : 1
+                        },
+                        "inputStage" : {
+                                "stage" : "IXSCAN",
+                                "keyPattern" : {
+                                        "restaurant_id" : 1,
+                                        "borough" : 1
+                                },
+                                "indexName" : "restaurant_id_1_borough_1",
+                                "isMultiKey" : false,
+                                "multiKeyPaths" : {
+                                        "restaurant_id" : [ ],
+                                        "borough" : [ ]
+                                },
+                                "isUnique" : false,
+                                "isSparse" : false,
+                                "isPartial" : false,
+                                "indexVersion" : 2,
+                                "direction" : "forward",
+                                "indexBounds" : {
+                                        "restaurant_id" : [
+                                                "[\"41098650\", \"41098650\"]"
+                                        ],
+                                        "borough" : [
+                                                "[MinKey, MaxKey]"
+                                        ]
+                                }
+                        }
+                },
+                "rejectedPlans" : [ ]
+        },
+        "serverInfo" : {
+                "host" : "drozdovase",
+                "port" : 27017,
+                "version" : "3.6.2",
+                "gitVersion" : "489d177dbd0f0420a8ca04d39fd78d0a2c539420"
+        },
+        "ok" : 1
+}
+
+
+4.4 Create a partial index on cuisine field which will be used only when filtering on borough equal to “Staten Island”:
+    db.restaurants.find({ borough: "Staten Island", cuisine: "American" }) – uses index
+    db.restaurants.find({ borough: "Staten Island", name: "Bagel Land" }) – does not use index
+    db.restaurants.find({ borough: "Queens", cuisine: "Pizza" }) – does not use index
+
+	Query: db.restaurants.createIndex({borough: 1, cuisine: 1},{partialFilterExpression: {borough:'Staten Island'}})
+
+	Result: {
+           "createdCollectionAutomatically" : false,
+           "numIndexesBefore" : 2,
+           "numIndexesAfter" : 3,
+           "ok" : 1
+	}
+
+4.5. Create an index to make query from task 3.4 covered and provide proof (from explain() or Compass UI) that it is indeed covered
+	Query: db.restaurants.createIndex({borough: 1 },{partialFilterExpression: {cuisine:'Seafood',grades:{grade:"B", date: {$gt: ISODate('2014-02-01'),$lt:ISODate('2014-03-01')}}}})
+
+	Result: {
+           "createdCollectionAutomatically" : false,
+           "numIndexesBefore" : 3,
+           "numIndexesAfter" : 4,
+           "ok" : 1
+	}
+
+
+	Proof: db.restaurants.find({cuisine:'Seafood',grades:{$elemMatch: {grade:'B',date: {$gt: ISODate('2014-02-01'),$lt:ISODate('2014-03-01')}}}},{borough: 1}).explain()
+	Result: {
+        "queryPlanner" : {
+                "plannerVersion" : 1,
+                "namespace" : "frontcamp.restaurants",
+                "indexFilterSet" : false,
+                "parsedQuery" : {
+                        "$and" : [
+                                {
+                                        "grades" : {
+                                                "$elemMatch" : {
+                                                        "$and" : [
+                                                                {
+                                                                        "grade" : {
+                                                                                "$eq" : "B"
+                                                                        }
+                                                                },
+                                                                {
+                                                                        "date" : {
+                                                                                "$lt" : ISODate("2014-03-01T00:00:00Z")
+                                                                        }
+                                                                },
+                                                                {
+                                                                        "date" : {
+                                                                                "$gt" : ISODate("2014-02-01T00:00:00Z")
+                                                                        }
+                                                                }
+                                                        ]
+                                                }
+                                        }
+                                },
+                                {
+                                        "cuisine" : {
+                                                "$eq" : "Seafood"
+                                        }
+                                }
+                        ]
+                },
+                "winningPlan" : {
+                        "stage" : "PROJECTION",
+                        "transformBy" : {
+                                "borough" : 1
+                        },
+                        "inputStage" : {
+                                "stage" : "COLLSCAN",
+                                "filter" : {
+                                        "$and" : [
+                                                {
+                                                        "grades" : {
+                                                                "$elemMatch" : {
+                                                                        "$and" : [
+                                                                                {
+                                                                                        "grade" : {
+                                                                                                "$eq" : "B"
+                                                                                        }
+                                                                                },
+                                                                                {
+                                                                                        "date" : {
+                                                                                                "$lt" : ISODate("2014-03-01T00:00:00Z")
+                                                                                        }
+                                                                                },
+                                                                                {
+                                                                                        "date" : {
+                                                                                                "$gt" : ISODate("2014-02-01T00:00:00Z")
+                                                                                        }
+                                                                                }
+                                                                        ]
+                                                                }
+                                                        }
+                                                },
+                                                {
+                                                        "cuisine" : {
+                                                                "$eq" : "Seafood"
+                                                        }
+                                                }
+                                        ]
+                                },
+                                "direction" : "forward"
+                        }
+                },
+                "rejectedPlans" : [ ]
+        },
+        "serverInfo" : {
+                "host" : "drozdovase",
+                "port" : 27017,
+                "version" : "3.6.2",
+                "gitVersion" : "489d177dbd0f0420a8ca04d39fd78d0a2c539420"
+        },
+        "ok" : 1
+}
+
+
+	
+	
+
+        
