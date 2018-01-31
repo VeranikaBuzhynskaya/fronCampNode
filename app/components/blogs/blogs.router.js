@@ -17,7 +17,7 @@ router.delete('/:id', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-    const updateBlog = {
+    const updatedBlog = {
         id: +req.params.id,
         title: req.body.title,
         article: req.body.article,
