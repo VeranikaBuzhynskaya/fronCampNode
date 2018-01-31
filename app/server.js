@@ -2,6 +2,7 @@ import express from 'express';
 import blogsRouter from './components/blogs/blogs.router';
 import logger from './utils/logger';
 import path from 'path';
+import favicon from 'serve-favicon';
 
 const app = express();
 const port = 3000;
@@ -20,6 +21,8 @@ app.use((req, res, next) => {
   logger.info(`Route ${req.url}`);
   next();
 });
+
+app.use(favicon('app/favicon.ico'));
 
 app.use('/blogs', blogsRouter);
 
