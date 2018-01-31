@@ -16,7 +16,7 @@ export default class BlogsModel {
 
     update(updateBlog) {
         var index = _.findIndex(blogsData, {id: updateBlog.id});
-        return index !== -1 ? blogsMockData.splice(index, 1, updateBlog) : [];
+        return index !== -1 ? blogsData.splice(index, 1, updateBlog) : [];
     }
 
     insert(newBlog) {
