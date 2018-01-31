@@ -26,6 +26,10 @@ app.use(favicon('app/favicon.ico'));
 
 app.use('/blogs', blogsRouter);
 
+app.use('/', (req, res) => {
+  res.render('welcomePage', { title: 'Hey', message: 'Hello there!' })
+});
+
 app.use((req, res) => {
   logger.warn(`Route ${req.url} is not to defined!`);
   res.render('welcomePage', { title: 'Hey', message: 'Hello there!' })
