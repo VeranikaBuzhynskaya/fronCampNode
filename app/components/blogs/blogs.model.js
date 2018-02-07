@@ -1,28 +1,37 @@
-import blogsData from '../../data/articles';
-import _ from 'lodash';
+import blogsSchema from '../../data/schema';
+import {ObjectId} from 'mongoose'
+import logger from "../../utils/logger";
 
+  
 export default class BlogsModel {
+    constructor() {
+
+    }
+
     getAll() {
-        return blogsData;
+        return blogsSchema.find();
     }
 
     getById(id) {
-        return _.find(blogsData, {id: id});
+        return blogsSchema.findById(id);
     }
 
     deleteById(id) {
-        return _.remove(blogsData, {id: id});
-    }
-
-    update(updateBlog) {
-        var index = _.findIndex(blogsData, {id: updateBlog.id});
-        return index !== -1 ? blogsMockData.splice(index, 1, updateBlog) : [];
+        return blogsSchema.remove({id:id});
     }
 
     insert(newBlog) {
-        newBlog.id = blogsData.length ? (blogsData[blogsData.length - 1].id + 1) : 0;
-        blogsData.push(newBlog);
+        const blogspostModel = new blogsSchema(newBlog);
+        return blogspostModel.save();
+    }
 
-        return [blogsData[blogsData.length - 1]];
-    }   
+    update(updateBlog) {
+        return blogsSchema.findById(updateBlog.id).then(blogModel => {
+            console.log(updateBlog);
+            blogsSchema.title = updateBlog.title;
+            blogsSchema.article = updateBlog.description;
+            blogsSchema.url = updateBlog.url;
+            return blogsSchema.save();
+        })
+    }
 }

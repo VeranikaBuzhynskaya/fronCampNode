@@ -2,6 +2,9 @@ import express from 'express';
 import blogsRouter from './components/blogs/blogs.router';
 import logger from './utils/logger';
 import path from 'path';
+import initSchema from './data/initSchema'
+
+initSchema();
 
 const app = express();
 const port = 3000;
@@ -22,6 +25,12 @@ app.use((req, res, next) => {
 });
 
 app.use('/blogs', blogsRouter);
+
+app.use((err, req, res, next) => {
+  logger.error(err);
+  res.sendStatus(500);
+  next();
+});
 
 app.use((req, res) => {
   logger.warn(`Route ${req.url} is not to defined!`);
