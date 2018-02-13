@@ -25,13 +25,14 @@ router.delete('/:id', (req, res) => {
 
 router.put('/:id', (req, res) => {
     const updateBlog = {
-        id: +req.params.id,
+        _id: req.params.id,
         title: req.body.title,
         article: req.body.article,
         url: req.body.url
     };
 
-    res.send(blogsModel.update(updateBlog));
+    // res.send(blogsModel.update(updateBlog));
+    blogsModel.update(updateBlog).then(() => res.sendStatus(200));
 });
 
 router.post('/', (req, res) => {

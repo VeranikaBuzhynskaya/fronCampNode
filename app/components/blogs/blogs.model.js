@@ -17,7 +17,7 @@ export default class BlogsModel {
     }
 
     deleteById(id) {
-        return blogsSchema.remove({id:id});
+        return blogsSchema.remove({_id:id});
     }
 
     insert(newBlog) {
@@ -26,12 +26,12 @@ export default class BlogsModel {
     }
 
     update(updateBlog) {
-        return blogsSchema.findById(updateBlog.id).then(blogModel => {
+        return blogsSchema.findById(updateBlog._id).then(blogModel => {
             console.log(updateBlog);
-            blogsSchema.title = updateBlog.title;
-            blogsSchema.article = updateBlog.description;
-            blogsSchema.url = updateBlog.url;
-            return blogsSchema.save();
+            blogModel.title = updateBlog.title;
+            blogModel.article = updateBlog.article;
+            blogModel.url = updateBlog.url;
+            return blogModel.save();
         })
     }
 }
